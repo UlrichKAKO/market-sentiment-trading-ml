@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+data/processed/*.csv
+!data/processed/results.csv
+!data/processed/backtest_*.csv
+!data/processed/euronext_microstructure.csv
+!data/processed/euronext_prediction_results.csv
+!data/processed/euronext_prediction_status.csv
+!data/processed/euronext_predictions.csv
+!data/processed/euronext_backtest.csv
+!data/processed/euronext_feature_importance.csv
+!data/processed/euronext_daily_sentiment.csv
+!data/processed/euronext_instrument_mapping.csv
+reports/figures/*.png

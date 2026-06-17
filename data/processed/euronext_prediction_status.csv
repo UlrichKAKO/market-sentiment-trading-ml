@@ -1,0 +1,2 @@
+mode,n_rows,n_dates,n_instruments,target_positive_rate,news_rows,matched_news_rows,sentiment_instruments,dataset_sentiment_rows,dataset_sentiment_instruments,note
+next_day_direction,1812,3,634,0.3515452538631347,300,300,30,0,0,Vraie prediction temporelle du prochain jour.
