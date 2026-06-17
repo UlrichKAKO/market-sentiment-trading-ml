@@ -96,6 +96,89 @@ else:
         "La couverture du sentiment Yahoo ne peut pas être calculée."
     )
 
+boursorama_sentiment_path = "data/processed/daily_sentiment.csv"
+st.subheader("Sentiment global Boursorama")
+if os.path.exists(boursorama_sentiment_path):
+    boursorama_sentiment = pd.read_csv(boursorama_sentiment_path)
+
+    required_boursorama_cols = {
+        "date",
+        "news_count",
+        "sentiment_mean",
+        "sentiment_positive_ratio",
+        "sentiment_negative_ratio",
+    }
+    if required_boursorama_cols.issubset(boursorama_sentiment.columns):
+        boursorama_sentiment["date"] = pd.to_datetime(boursorama_sentiment["date"])
+        latest_boursorama = boursorama_sentiment.sort_values("date").iloc[-1]
+        positive_ratio = float(latest_boursorama["sentiment_positive_ratio"])
+        negative_ratio = float(latest_boursorama["sentiment_negative_ratio"])
+        neutral_ratio = max(0.0, 1.0 - positive_ratio - negative_ratio)
+        sentiment_mean = float(latest_boursorama["sentiment_mean"])
+
+        sentiment_level = "neutre"
+        if sentiment_mean > 0.05:
+            sentiment_level = "positif"
+        elif sentiment_mean < -0.05:
+            sentiment_level = "négatif"
+
+        boursorama_cols = st.columns(4)
+        boursorama_cols[0].metric("Date", latest_boursorama["date"].date().isoformat())
+        boursorama_cols[1].metric("News analysées", f"{int(latest_boursorama['news_count']):,}")
+        boursorama_cols[2].metric("Sentiment moyen", f"{sentiment_mean:.3f}")
+        boursorama_cols[3].metric("Lecture", f"Climat {sentiment_level}")
+
+        st.dataframe(
+            boursorama_sentiment.assign(
+                sentiment_positive_ratio=lambda x: (x["sentiment_positive_ratio"] * 100).round(2),
+                sentiment_negative_ratio=lambda x: (x["sentiment_negative_ratio"] * 100).round(2),
+            ).rename(
+                columns={
+                    "date": "date",
+                    "news_count": "news_count",
+                    "sentiment_mean": "sentiment_mean",
+                    "sentiment_std": "sentiment_std",
+                    "sentiment_positive_ratio": "positive_%", 
+                    "sentiment_negative_ratio": "negative_%",
+                }
+            ),
+            width="stretch",
+        )
+
+        graph_cols = st.columns(2)
+        with graph_cols[0]:
+            fig_bourso, ax_bourso = plt.subplots(figsize=(6, 4))
+            labels = ["Positif", "Neutre", "Négatif"]
+            values = [positive_ratio, neutral_ratio, negative_ratio]
+            colors = ["#2E7D32", "#9CA3AF", "#C62828"]
+            ax_bourso.bar(labels, values, color=colors)
+            ax_bourso.set_ylim(0, 1)
+            ax_bourso.set_title("Répartition du sentiment Boursorama")
+            ax_bourso.set_ylabel("Part des news")
+            for idx, value in enumerate(values):
+                ax_bourso.text(idx, value + 0.02, f"{value:.1%}", ha="center")
+            st.pyplot(fig_bourso)
+
+        with graph_cols[1]:
+            fig_score, ax_score = plt.subplots(figsize=(6, 4))
+            ax_score.barh(["Sentiment moyen"], [sentiment_mean], color="#1F4D78")
+            ax_score.axvline(0, color="black", linewidth=1)
+            ax_score.set_xlim(-1, 1)
+            ax_score.set_title("Score moyen du sentiment global")
+            ax_score.set_xlabel("Négatif ← 0 → Positif")
+            st.pyplot(fig_score)
+
+        st.info(
+            "Ce graphe représente le sentiment global des informations Boursorama. "
+            "Il décrit le climat informationnel général, mais il n'est pas relié à un ticker "
+            "ou à un ISIN précis."
+        )
+else:
+    st.warning(
+        "Le fichier `data/processed/daily_sentiment.csv` est absent. "
+        "Le sentiment global Boursorama ne peut pas être affiché."
+    )
+
 model_file = st.selectbox("Choisir un backtest", sorted(files))
 bt = pd.read_csv(f"data/processed/{model_file}")
 

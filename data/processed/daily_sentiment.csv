@@ -1,0 +1,2 @@
+date,news_count,sentiment_mean,sentiment_std,sentiment_positive_ratio,sentiment_negative_ratio
+2026-05-06,161,-0.03739192546583851,0.19795275066766413,0.08074534161490683,0.2360248447204969
