@@ -54,6 +54,39 @@ ax.set_xlabel("Date")
 ax.set_ylabel("Capital normalisé")
 st.pyplot(fig)
 
+yahoo_dataset_path = "data/processed/model_dataset.csv"
+if os.path.exists(yahoo_dataset_path):
+    st.subheader("Couverture du sentiment Yahoo US")
+    yahoo_data = pd.read_csv(yahoo_dataset_path)
+
+    if {"ticker", "sentiment_count"}.issubset(yahoo_data.columns):
+        yahoo_total_rows = len(yahoo_data)
+        yahoo_sentiment_mask = yahoo_data["sentiment_count"].fillna(0) > 0
+        yahoo_sentiment_rows = int(yahoo_sentiment_mask.sum())
+        yahoo_sentiment_tickers = int(yahoo_data.loc[yahoo_sentiment_mask, "ticker"].nunique())
+        yahoo_total_tickers = int(yahoo_data["ticker"].nunique())
+        yahoo_sentiment_share = yahoo_sentiment_rows / yahoo_total_rows if yahoo_total_rows else 0
+
+        yahoo_cols = st.columns(5)
+        yahoo_cols[0].metric("Lignes ML Yahoo", f"{yahoo_total_rows:,}")
+        yahoo_cols[1].metric("Tickers Yahoo", f"{yahoo_total_tickers:,}")
+        yahoo_cols[2].metric("Lignes ML sentiment", f"{yahoo_sentiment_rows:,}")
+        yahoo_cols[3].metric("Tickers ML sentiment", f"{yahoo_sentiment_tickers:,}")
+        yahoo_cols[4].metric("Couverture sentiment", f"{yahoo_sentiment_share:.1%}")
+
+        st.info(
+            "Le pipeline Yahoo US prévoit l'intégration du sentiment avec l'expérience "
+            "`market_plus_sentiment`. Ces indicateurs mesurent la couverture réelle du "
+            "sentiment dans le dataset utilisé par le modèle."
+        )
+
+        if yahoo_sentiment_rows == 0:
+            st.warning(
+                "Dans cette version, aucune ligne Yahoo du dataset ML ne possède de sentiment "
+                "aligné avec les dates/tickers. L'impact positif ou négatif du sentiment ne peut "
+                "donc pas encore être interprété empiriquement pour Yahoo US."
+            )
+
 euronext_path = "data/processed/euronext_microstructure.csv"
 if not os.path.exists(euronext_path):
     euronext_path = "data/processed/euronext_microstructure_20240104.csv"
