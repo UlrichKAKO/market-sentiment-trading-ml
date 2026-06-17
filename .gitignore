@@ -4,6 +4,7 @@ __pycache__/
 .DS_Store
 data/processed/*.csv
 !data/processed/results.csv
+!data/processed/model_dataset.csv
 !data/processed/backtest_*.csv
 !data/processed/euronext_microstructure.csv
 !data/processed/euronext_prediction_results.csv

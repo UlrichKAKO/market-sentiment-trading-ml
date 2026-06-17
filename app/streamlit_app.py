@@ -41,22 +41,9 @@ cols[1].metric("Expérience", best["experiment"])
 cols[2].metric("Sharpe", f"{best.get('sharpe', 0):.2f}")
 cols[3].metric("Rendement total", f"{best.get('total_return', 0):.1%}")
 
-model_file = st.selectbox("Choisir un backtest", sorted(files))
-bt = pd.read_csv(f"data/processed/{model_file}")
-
-st.subheader("Equity curve")
-fig, ax = plt.subplots()
-ax.plot(pd.to_datetime(bt["date"]), bt["market_equity"], label="Buy & Hold")
-ax.plot(pd.to_datetime(bt["date"]), bt["strategy_equity"], label="Strategy")
-ax.legend()
-ax.set_title("Performance cumulée")
-ax.set_xlabel("Date")
-ax.set_ylabel("Capital normalisé")
-st.pyplot(fig)
-
 yahoo_dataset_path = "data/processed/model_dataset.csv"
+st.subheader("Couverture du sentiment Yahoo US")
 if os.path.exists(yahoo_dataset_path):
-    st.subheader("Couverture du sentiment Yahoo US")
     yahoo_data = pd.read_csv(yahoo_dataset_path)
 
     if {"ticker", "sentiment_count"}.issubset(yahoo_data.columns):
@@ -74,6 +61,23 @@ if os.path.exists(yahoo_dataset_path):
         yahoo_cols[3].metric("Tickers ML sentiment", f"{yahoo_sentiment_tickers:,}")
         yahoo_cols[4].metric("Couverture sentiment", f"{yahoo_sentiment_share:.1%}")
 
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "pipeline": "Yahoo US",
+                        "identifiant": "ticker",
+                        "lignes_ml": yahoo_total_rows,
+                        "tickers_total": yahoo_total_tickers,
+                        "lignes_ml_sentiment": yahoo_sentiment_rows,
+                        "tickers_ml_sentiment": yahoo_sentiment_tickers,
+                        "couverture_sentiment": f"{yahoo_sentiment_share:.1%}",
+                    }
+                ]
+            ),
+            width="stretch",
+        )
+
         st.info(
             "Le pipeline Yahoo US prévoit l'intégration du sentiment avec l'expérience "
             "`market_plus_sentiment`. Ces indicateurs mesurent la couverture réelle du "
@@ -86,6 +90,24 @@ if os.path.exists(yahoo_dataset_path):
                 "aligné avec les dates/tickers. L'impact positif ou négatif du sentiment ne peut "
                 "donc pas encore être interprété empiriquement pour Yahoo US."
             )
+else:
+    st.warning(
+        "Le fichier `data/processed/model_dataset.csv` est absent. "
+        "La couverture du sentiment Yahoo ne peut pas être calculée."
+    )
+
+model_file = st.selectbox("Choisir un backtest", sorted(files))
+bt = pd.read_csv(f"data/processed/{model_file}")
+
+st.subheader("Equity curve")
+fig, ax = plt.subplots()
+ax.plot(pd.to_datetime(bt["date"]), bt["market_equity"], label="Buy & Hold")
+ax.plot(pd.to_datetime(bt["date"]), bt["strategy_equity"], label="Strategy")
+ax.legend()
+ax.set_title("Performance cumulée")
+ax.set_xlabel("Date")
+ax.set_ylabel("Capital normalisé")
+st.pyplot(fig)
 
 euronext_path = "data/processed/euronext_microstructure.csv"
 if not os.path.exists(euronext_path):
